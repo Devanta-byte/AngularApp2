@@ -1,0 +1,246 @@
+<div class="page-shell">
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="Daybook home">
+      <span class="brand-mark" aria-hidden="true">d</span>
+      <span>daybook<span class="brand-light"> / focus</span></span>
+    </a>
+    <span class="topbar-note">A little more room to think</span>
+  </header>
+
+  <main id="top">
+    <section class="intro">
+      <div>
+        <p class="eyebrow">YOUR DAY, AT YOUR PACE</p>
+        <h1>Make room for<br /><em>what matters.</em></h1>
+      </div>
+      <p class="intro-copy">A simple place for the next thing, and the time to give it.</p>
+    </section>
+
+    @if (tasks$ | async; as tasks) {
+      <div class="workspace">
+        <section class="task-workspace" aria-labelledby="tasks-heading">
+          <form class="task-form" (ngSubmit)="addTask()">
+            <div class="form-heading">
+              <span class="form-mark" aria-hidden="true">+</span>
+              <div>
+                <h2>Add a task</h2>
+                <p>Keep the next step clear and manageable.</p>
+              </div>
+            </div>
+
+            <label class="visually-hidden" for="task-title">Task name</label>
+            <input
+              id="task-title"
+              name="title"
+              type="text"
+              maxlength="100"
+              placeholder="What would you like to get done?"
+              [(ngModel)]="title"
+              required
+            />
+
+            <label class="visually-hidden" for="task-description">Task details</label>
+            <textarea
+              id="task-description"
+              name="description"
+              rows="2"
+              maxlength="220"
+              placeholder="A note to make it easier to begin (optional)"
+              [(ngModel)]="description"
+            ></textarea>
+
+            <div class="form-controls">
+              <label class="field-label" for="task-due-date">Due date</label>
+              <input id="task-due-date" name="dueDate" type="date" [(ngModel)]="dueDate" />
+
+              <label class="field-label" for="task-priority">Priority</label>
+              <select id="task-priority" name="priority" [(ngModel)]="priority">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+
+              <button class="primary-button add-button" type="submit" [disabled]="!title.trim()">
+                Add task <span aria-hidden="true">↗</span>
+              </button>
+            </div>
+          </form>
+
+          <div class="task-list-heading">
+            <div>
+              <p class="eyebrow">A GENTLE PLAN</p>
+              <h2 id="tasks-heading">
+                Your tasks <span class="task-count">{{ tasks.length }}</span>
+              </h2>
+            </div>
+            <span class="task-hint">One step at a time</span>
+          </div>
+
+          <div class="filter-row" role="group" aria-label="Filter tasks">
+            @for (filter of filters; track filter) {
+              <button
+                type="button"
+                [attr.aria-pressed]="currentFilter === filter"
+                [class.is-selected]="currentFilter === filter"
+                (click)="setFilter(filter)"
+              >
+                {{ filter | titlecase }} <span>{{ countTasks(tasks, filter) }}</span>
+              </button>
+            }
+          </div>
+
+          <div class="task-list" aria-live="polite">
+            @for (task of visibleTasks(tasks); track trackById($index, task)) {
+              <article
+                class="task-row"
+                [appTaskStyle]="{ completed: task.completed, priority: task.priority }"
+              >
+                <button
+                  class="check-button"
+                  type="button"
+                  [attr.aria-label]="
+                    task.completed ? 'Mark ' + task.title + ' active' : 'Complete ' + task.title
+                  "
+                  [attr.aria-pressed]="task.completed"
+                  (click)="toggleTask(task)"
+                >
+                  <span aria-hidden="true">{{ task.completed ? '✓' : '' }}</span>
+                </button>
+
+                <div class="task-copy">
+                  <div class="task-title-line">
+                    <h3>{{ task.title }}</h3>
+                    <span class="priority-pill" [class]="'priority-pill priority-' + task.priority">
+                      {{ task.priority }}
+                    </span>
+                  </div>
+                  @if (task.description) {
+                    <p class="task-description">{{ task.description }}</p>
+                  }
+                  <div class="task-meta">
+                    <span
+                      [class.is-overdue]="
+                        !task.completed && task.dueDate && task.dueDate < dueToday
+                      "
+                    >
+                      {{ task.dueDate | taskDue }}
+                    </span>
+                    @if (task.focusSessions > 0) {
+                      <span class="meta-divider" aria-hidden="true">·</span>
+                      <span
+                        >{{ task.focusSessions }} focus
+                        {{ task.focusSessions === 1 ? 'session' : 'sessions' }}</span
+                      >
+                    }
+                  </div>
+                </div>
+
+                <button
+                  class="focus-task-button"
+                  type="button"
+                  [class.is-current]="selectedTaskId === task.id"
+                  [disabled]="task.completed"
+                  [attr.aria-label]="'Focus on ' + task.title"
+                  (click)="selectFocusTask(task)"
+                >
+                  Focus <span aria-hidden="true">↗</span>
+                </button>
+              </article>
+            } @empty {
+              <div class="empty-state">
+                <span class="empty-spark" aria-hidden="true">✳</span>
+                <h3>
+                  {{ currentFilter === 'completed' ? 'Nothing finished just yet' : 'A clear page' }}
+                </h3>
+                <p>
+                  {{
+                    currentFilter === 'active'
+                      ? 'You have no active tasks. Add one when something comes to mind.'
+                      : currentFilter === 'completed'
+                        ? 'Complete a task and it will find its way here.'
+                        : 'Add one small task to get started.'
+                  }}
+                </p>
+              </div>
+            }
+          </div>
+        </section>
+
+        <aside class="focus-panel" aria-labelledby="focus-heading">
+          <div class="focus-panel-top">
+            <p class="eyebrow">A MOMENT FOR YOU</p>
+            <span class="focus-dot" aria-hidden="true"></span>
+          </div>
+          <h2 id="focus-heading">Focus time</h2>
+          <p class="focus-copy">Give one thing your full attention.</p>
+
+          @if (focusedTask(tasks); as focusTask) {
+            <div class="focus-task-label">CURRENTLY WITH</div>
+            <p class="focus-task-title">{{ focusTask.title }}</p>
+            <div class="timer-wrap" [class.timer-active]="isTimerRunning">
+              <svg
+                class="timer-ring"
+                viewBox="0 0 200 200"
+                role="img"
+                [attr.aria-label]="formattedTime + ' remaining'"
+              >
+                <circle class="timer-track" cx="100" cy="100" r="88"></circle>
+                <circle
+                  class="timer-progress"
+                  cx="100"
+                  cy="100"
+                  r="88"
+                  [style.strokeDashoffset]="timerDashOffset"
+                ></circle>
+              </svg>
+              <div class="timer-display">
+                <span>{{ formattedTime }}</span>
+                <small>{{ isTimerRunning ? 'IN FOCUS' : '25 MINUTES' }}</small>
+              </div>
+            </div>
+
+            <div class="timer-actions">
+              @if (isTimerRunning) {
+                <button
+                  class="primary-button timer-main-button"
+                  type="button"
+                  (click)="pauseTimer()"
+                >
+                  Pause
+                </button>
+              } @else {
+                <button
+                  class="primary-button timer-main-button"
+                  type="button"
+                  [disabled]="focusTask.completed"
+                  (click)="startTimer(focusTask)"
+                >
+                  {{ secondsRemaining === focusLengthSeconds ? 'Start focus' : 'Continue' }}
+                </button>
+              }
+              <button class="reset-button" type="button" (click)="resetTimer()">Reset</button>
+            </div>
+          } @else {
+            <div class="focus-empty">
+              <span aria-hidden="true">✳</span>
+              <p>Add a task, then choose <strong>Focus</strong> to begin a session.</p>
+            </div>
+          }
+
+          <p class="timer-message" aria-live="polite">
+            {{ timerMessage || 'A single 25-minute session, at your pace.' }}
+          </p>
+          <div class="focus-footnote">
+            <span aria-hidden="true">◷</span>
+            <span>Completed sessions are counted on the task.</span>
+          </div>
+        </aside>
+      </div>
+    }
+
+    <footer class="page-footer">
+      <span>Made with intention</span>
+      <span>MWD4B · Angular Assignment 2</span>
+    </footer>
+  </main>
+</div>

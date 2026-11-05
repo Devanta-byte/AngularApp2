@@ -1,0 +1,61 @@
+:root {
+  color-scheme: light;
+  --ink: oklch(0.29 0.07 255);
+  --ink-soft: oklch(0.44 0.045 255);
+  --muted: oklch(0.57 0.035 105);
+  --blue: oklch(0.62 0.21 255);
+  --blue-dark: oklch(0.36 0.12 255);
+  --blue-soft: oklch(0.96 0.025 255);
+  --blue-border: oklch(0.88 0.045 255);
+  --blue-focus: oklch(0.91 0.06 255);
+  --paper: oklch(0.97 0.012 95);
+  --surface: oklch(0.99 0.008 95);
+  --line: oklch(0.89 0.018 95);
+  --green: oklch(0.48 0.09 150);
+  --red: oklch(0.54 0.14 25);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: var(--paper);
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--blue-focus);
+  outline-offset: 3px;
+}
+
+::selection {
+  color: var(--blue-dark);
+  background: var(--blue-focus);
+}
